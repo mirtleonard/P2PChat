@@ -6,29 +6,29 @@ public class JSONBuilder {
     private final JSONObject header = new JSONObject();
     private String body;
 
-    private JSONBuilder(){
+    private JSONBuilder() {
 
     }
 
-    public static JSONBuilder create(){
+    public static JSONBuilder create() {
         return new JSONBuilder();
     }
 
     public JSONBuilder addHeader(String key, String value) {
-       header.put(key, value);
-       return this;
+        header.put(key, value);
+        return this;
     }
 
     public JSONBuilder setBody(String content) {
-       body = content;
-       return this;
+        body = content;
+        return this;
     }
 
-    public String build() {
+    public JSONObject build() {
         JSONObject json = new JSONObject();
         json.put("header", header.toString());
         json.put("body", body);
-        return json.toString();
+        return json;
     }
 
 }

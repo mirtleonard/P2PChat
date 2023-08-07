@@ -1,104 +1,48 @@
 package com.tora;
 
-import netscape.javascript.JSObject;
-import org.json.JSONObject;
+import com.tora.handlers.ConnectionHandler;
+import com.tora.handlers.ConsoleRequestHandler;
+import com.tora.ui.ConsoleClient;
 
-import java.io.*;
-import java.net.ServerSocket;
-import java.net.Socket;
+import java.util.InputMismatchException;
 import java.util.Map;
+import java.util.Scanner;
 import java.util.concurrent.*;
 
-/**
- * Hello world!
- *
- */
-public class App 
-{
-    private final static Map<String, Connection> connections = new ConcurrentHashMap<>();
+public class App {
+    public static void main(String[] args) throws Exception {
+        ExecutorService executorService = Executors.newCachedThreadPool();
+        Map<String, Connection> connections = new ConcurrentHashMap<>();
 
-    public static class Connection implements Callable<Integer>
-    {
-        private LinkedBlockingQueue<JSONObject> requests;
-        private final Socket socket;
-        private final ObjectInputStream inputStream;
-        private final ObjectOutputStream outputStream;
-        private volatile boolean terminated;
-        private final ServerProxy serverProxy;
-        public Connection(Socket socket, ServerProxy serverProxy) throws IOException {
-            this.socket = socket;
-            inputStream = new ObjectInputStream(socket.getInputStream());
-            outputStream = new ObjectOutputStream(socket.getOutputStream());
-            this.serverProxy = serverProxy;
-            this.serverProxy.setConnection(this);
+        Service service = new Service(connections, executorService);
+        ConsoleClient consoleClient = new ConsoleClient(service);
+        ConsoleRequestHandler consoleRequestHandler = new ConsoleRequestHandler(consoleClient);
+        service.setRequestHandler(consoleRequestHandler);
 
+        BlockingQueue<Connection> connectionBlockingQueue = new LinkedBlockingQueue<>();
+        ConnectionHandler connectionHandler = new ConnectionHandler(connectionBlockingQueue,
+                connections,
+                consoleRequestHandler,
+                executorService);
+
+        Scanner scanner = new Scanner(System.in);
+        int port;
+        System.out.print("Listening port: ");
+        try {
+            port = scanner.nextInt();
+            connectionHandler.listen(port);
+        } catch (InputMismatchException e) {
+            System.out.println("Port should be a number");
+            System.out.println("Terminating...");
+            return;
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            System.out.println("Terminating...");
+            return;
         }
 
-        public Socket getSocket() {
-            return socket;
-        }
+        consoleClient.run();
 
-        public void terminate(){
-            terminated = true;
-            try {
-                inputStream.close();
-                outputStream.close();
-                socket.close();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-
-        }
-
-        public void write(String message) throws IOException {
-            synchronized (outputStream) {
-                outputStream.writeObject(message);
-                outputStream.flush();
-            }
-        }
-
-        public Object read() throws IOException, ClassNotFoundException {
-            return inputStream.readObject();
-        }
-
-        @Override
-        public Integer call() throws Exception {
-            while(!terminated){
-                serverProxy.handleReply(new JSONObject((String)inputStream.readObject()));
-            }
-            return 0;
-        }
-    }
-
-    public static class Listener implements Callable<Integer> {
-        private final int port;
-        private volatile boolean terminated;
-
-        private final Map<String, ServerProxy> connections;
-        private final Client client;
-
-        public Listener(int port, Map<String, ServerProxy> con, Client client){
-            connections = con;
-            this.port = port;
-            this.client = client;
-        }
-
-        public void terminate(){
-            terminated = true;
-        }
-
-        @Override
-        public Integer call() throws Exception {
-            ServerSocket socket = new ServerSocket(port);
-            while(!terminated){
-                Socket s = socket.accept();
-                ServerProxy server = new ServerProxy(client);
-                server.setConnection(new Connection(s, server));
-                // TODO add connection params
-                connections.putIfAbsent(s.getInetAddress().getHostAddress(), server);
-            }
-            socket.close();
-            return 0;
-        }
+        connectionHandler.shutdown();
     }
 }
