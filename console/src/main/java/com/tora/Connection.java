@@ -34,7 +34,7 @@ public class Connection implements Callable<Integer> {
                     .addHeader("type", "connect")
                     .addHeader("host", socket.getInetAddress().getHostAddress())
                     .addHeader("timestamp", LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME))
-                    .build());
+                    .build(), this);
         } catch (Exception ignore) {
         }
     }
@@ -60,7 +60,6 @@ public class Connection implements Callable<Integer> {
 
     public void send(JSONObject jsonObject) throws IOException {
         synchronized (outputStream) {
-            System.out.println(jsonObject.toString());
             outputStream.writeObject(jsonObject.toString());
             outputStream.flush();
         }
@@ -70,7 +69,7 @@ public class Connection implements Callable<Integer> {
     public Integer call() {
         try {
             while (!terminated) {
-                handler.handle(new JSONObject((String) inputStream.readObject()));
+                handler.handle(new JSONObject((String) inputStream.readObject()), this);
             }
         } catch (Exception e) {
             terminated = true;

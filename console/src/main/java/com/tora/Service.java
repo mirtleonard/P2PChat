@@ -48,4 +48,15 @@ public class Service {
             return value;
         });
     }
+
+    public boolean terminate(String connection){
+        return connections.computeIfPresent(connection,(key, value) ->{
+           try{
+               value.send(JSONBuilder.create().addHeader("type", "terminate").build());
+               value.terminate();
+           }catch (IOException ignore){
+           }
+           return value;
+        }) == null;
+    }
 }

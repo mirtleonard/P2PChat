@@ -50,6 +50,18 @@ public class ConsoleClient {
                         .replaceFirst("[^ ]* *", "").replaceFirst("[^ ]* *", ""));
                 continue;
             }
+            if("terminate".equals(command[0])){
+                if(command.length != 2){
+                    System.out.println("Missing arguments");
+                    continue;
+                }
+                if(service.terminate(command[1])){
+                    System.out.println("Connection successfully terminated");
+                }else{
+                    System.out.println("Connection doesnt exists");
+                }
+                continue;
+            }
             if ("quit".equals(command[0])) {
                 break;
             }
