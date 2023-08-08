@@ -11,12 +11,16 @@ import java.util.concurrent.*;
 
 public class App {
     public static void main(String[] args) throws Exception {
+        Map<String, GroupChat> groupChats = new ConcurrentHashMap<>();
+
         ExecutorService executorService = Executors.newCachedThreadPool();
         Map<String, Connection> connections = new ConcurrentHashMap<>();
 
         Service service = new Service(connections, executorService);
+        service.setGroupChats(groupChats);
         ConsoleClient consoleClient = new ConsoleClient(service);
         ConsoleRequestHandler consoleRequestHandler = new ConsoleRequestHandler(consoleClient);
+        consoleRequestHandler.setGroupChats(groupChats);
         service.setRequestHandler(consoleRequestHandler);
 
         BlockingQueue<Connection> connectionBlockingQueue = new LinkedBlockingQueue<>();

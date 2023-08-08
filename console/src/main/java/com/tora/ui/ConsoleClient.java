@@ -64,6 +64,22 @@ public class ConsoleClient {
                 service.terminate(command[1]);
                 continue;
             }
+            if ("create_chat".equals(command[0])){
+                if(command.length != 2){
+                    System.out.println("Missing chat name");
+                    continue;
+                }
+                service.createChat(command[1]);
+                continue;
+            }
+            if ("get_chats".equals(command[0])){
+                if(command.length != 2){
+                    System.out.println("Missing ip");
+                    continue;
+                }
+                service.getChatsFromUser(command[1]);
+                continue;
+            }
             if ("quit".equals(command[0])) {
                 break;
             }

@@ -2,12 +2,15 @@ package com.tora;
 
 import org.json.JSONObject;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
 public class JSONBuilder {
     private final JSONObject header = new JSONObject();
     private Object body;
 
     private JSONBuilder() {
-
+        header.put("timestamp", LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME));
     }
 
     public static JSONBuilder create() {

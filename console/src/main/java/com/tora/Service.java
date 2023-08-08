@@ -65,4 +65,29 @@ public class Service {
            return value;
         });
     }
+
+    private Map<String, GroupChat> groupChats;
+
+    public void setGroupChats(Map<String, GroupChat> groupChats){
+        this.groupChats = groupChats;
+    }
+
+    public void createChat(String name){
+        groupChats.putIfAbsent(name, new GroupChat(name));
+    }
+
+    public void removeChat(String name){
+        groupChats.remove(name);
+    }
+
+    public void getChatsFromUser(String host){
+        connections.computeIfPresent(host, (key, value) ->
+        {
+            try {
+                value.send(JSONBuilder.create().addHeader("type", "get_chats").build());
+            } catch (IOException ignore) {
+            }
+            return value;
+        });
+    }
 }
