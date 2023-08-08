@@ -4,5 +4,5 @@ import com.tora.Connection;
 import org.json.JSONObject;
 
 public interface IRequestHandler {
-    void handle(JSONObject request, Connection connection);
+    void handle(JSONObject request, Connection connection) throws Exception;
 }

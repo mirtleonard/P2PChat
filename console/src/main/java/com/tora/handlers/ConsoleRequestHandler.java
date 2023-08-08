@@ -22,7 +22,7 @@ public class ConsoleRequestHandler implements IRequestHandler {
             logger.info("header missing");
             return;
         }
-        JSONObject header = new JSONObject(request.getString("header"));
+        JSONObject header = request.getJSONObject("header");
         if (!header.has("type")) {
             logger.info("JSON object doesn't have type");
             return;
@@ -33,7 +33,7 @@ public class ConsoleRequestHandler implements IRequestHandler {
         } else if ("local_connect".equals(header.get("type"))) {
             client.showConsole("connected with " + connection.getSocket().getInetAddress().getHostAddress());
         } else if ("message".equals(header.get("type"))) {
-            client.showConsole((String) request.get("body"));
+            client.showConsole(request.get("body").toString());
         }else if ("local_disconnect".equals(header.get("type"))){
             client.showConsole("disconnect from " + connection.getSocket().getInetAddress().getHostAddress());
         }

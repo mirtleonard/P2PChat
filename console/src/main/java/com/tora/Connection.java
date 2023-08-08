@@ -26,10 +26,14 @@ public class Connection implements Callable<Integer> {
 
     public Connection(Socket socket) throws IOException {
         this.socket = socket;
+
         outputStream = new ObjectOutputStream(this.socket.getOutputStream());
         outputStream.flush();
         inputStream = new ObjectInputStream(this.socket.getInputStream());
+
+
     }
+
 
     public void setHandler(IRequestHandler handler) {
         this.handler = handler;
@@ -63,12 +67,16 @@ public class Connection implements Callable<Integer> {
             logger.error("while closing error {} {}", e.getClass().getSimpleName(), e.getMessage());
         }
         logger.info("connection {} closed", socket.getInetAddress().toString());
-        this.handler.handle(JSONBuilder
-                .create()
-                .addHeader("type", "local_disconnect")
-                .addHeader("host", socket.getInetAddress().toString())
-                .addHeader("timestamp", LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME))
-                .build(), this);
+        try {
+            this.handler.handle(JSONBuilder
+                    .create()
+                    .addHeader("type", "local_disconnect")
+                    .addHeader("host", socket.getInetAddress().toString())
+                    .addHeader("timestamp", LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME))
+                    .build(), this);
+        }catch (Exception e){
+            logger.error("{} {}", e.getClass().getSimpleName(), e.getMessage());
+        }
     }
 
     public void send(JSONObject jsonObject) throws IOException {
@@ -84,13 +92,15 @@ public class Connection implements Callable<Integer> {
     public Integer call() {
         while (!terminated) {
             try {
+                logger.info("waiting for: {}", socket.getInetAddress().toString());
                 JSONObject tmp = new JSONObject((String) inputStream.readObject());
                 logger.info("getting From: {} JsonObject: {}", socket.getInetAddress().toString(), tmp);
                 handler.handle(tmp, this);
-            }catch (JSONException ignore) {
-            } catch (Exception e) {
-                terminated = true;
+            } catch (IOException e) {
+                terminate();
+                logger.error("from: {} error {} {}", socket.getInetAddress().toString(), e.getClass().getSimpleName(), e.getMessage());
                 return -1;
+            } catch (Exception ignore) {
             }
         }
         return 0;

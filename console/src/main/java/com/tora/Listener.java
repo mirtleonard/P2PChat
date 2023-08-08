@@ -26,7 +26,7 @@ public class Listener implements Callable<Integer> {
         this.port = port;
     }
 
-    public void terminate(){
+    public void terminate() {
         logger.info("Listener terminating");
         terminated = true;
 
@@ -42,15 +42,25 @@ public class Listener implements Callable<Integer> {
         logger.info("start listening");
         try {
             socket = new ServerSocket(port);
-            while (!terminated) {
+        } catch (Exception e) {
+            logger.error("socket server error {} {}", e.getClass().getSimpleName(), e.getMessage());
+            System.exit(-1);
+        }
+
+        while (!terminated) {
+            try {
                 Socket s = socket.accept();
                 logger.info("new connection {}", s.getInetAddress().toString());
-                Connection connection = new Connection(s);
-                newConnectionsQueue.put(connection);
+                try {
+                    Connection connection = new Connection(s);
+                    newConnectionsQueue.put(connection);
+                } catch (Exception ignore) {
+                }
+            } catch (Exception exception) {
+                logger.error("exception {} {}", exception.getClass().getSimpleName(), exception.getMessage());
+                terminate();
+                return -1;
             }
-        } catch (Exception exception) {
-            logger.error("exception {} {}", exception.getClass().getSimpleName(), exception.getMessage());
-            System.exit(-1);
         }
         return 0;
     }

@@ -4,7 +4,7 @@ import org.json.JSONObject;
 
 public class JSONBuilder {
     private final JSONObject header = new JSONObject();
-    private String body;
+    private Object body = new Object();
 
     private JSONBuilder() {
 
@@ -14,20 +14,21 @@ public class JSONBuilder {
         return new JSONBuilder();
     }
 
-    public JSONBuilder addHeader(String key, String value) {
+    public JSONBuilder addHeader(String key, Object value) {
         header.put(key, value);
         return this;
     }
 
-    public JSONBuilder setBody(String content) {
+    public JSONBuilder setBody(Object content) {
         body = content;
         return this;
     }
 
     public JSONObject build() {
         JSONObject json = new JSONObject();
-        json.put("header", header.toString());
+        json.put("header", header);
         json.put("body", body);
+
         return json;
     }
 
