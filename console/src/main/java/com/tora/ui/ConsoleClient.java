@@ -11,7 +11,7 @@ import java.util.Scanner;
 public class ConsoleClient {
     private final Service service;
 
-    private final Logger logger = LoggerFactory.getLogger(getClass());
+    private static final Logger logger = LoggerFactory.getLogger(ConsoleClient.class);
 
     public ConsoleClient(Service service) {
         this.service = service;

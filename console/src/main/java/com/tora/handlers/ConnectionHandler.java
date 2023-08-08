@@ -33,17 +33,14 @@ public class ConnectionHandler {
     private void submitPendingConnections() {
         while (running) {
             try {
-                Connection connection = pendingConnections.poll(2, TimeUnit.SECONDS);
-                if (connection == null) {
-                    continue;
-                }
+                Connection connection = pendingConnections.take();
                 if (connections.putIfAbsent(connection.getSocket().getInetAddress().toString(), connection) == null) {
                     logger.info("Connection {} added", connection.getSocket().getInetAddress().toString());
                     connection.setHandler(requestHandler);
                     executorService.submit(connection);
                 }
             } catch (Exception exception) {
-                logger.debug("", exception);
+                logger.debug("Exception {} {}", exception.getClass().getSimpleName(), exception.getMessage());
             }
         }
     }
