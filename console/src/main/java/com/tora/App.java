@@ -3,7 +3,6 @@ package com.tora;
 import com.tora.handlers.ConnectionHandler;
 import com.tora.handlers.ConsoleRequestHandler;
 import com.tora.ui.ConsoleClient;
-import org.json.JSONObject;
 
 import java.util.InputMismatchException;
 import java.util.Map;

@@ -20,18 +20,16 @@ public class Connection implements Callable<Integer> {
     private volatile boolean terminated;
     private final Socket socket;
 
-    private final ObjectInputStream inputStream;
+    private ObjectInputStream inputStream;
     private final ObjectOutputStream outputStream;
     private IRequestHandler handler;
 
     public Connection(Socket socket) throws IOException {
+        logger.info("creating connection for {}", socket.getInetAddress().getHostAddress());
         this.socket = socket;
-
         outputStream = new ObjectOutputStream(this.socket.getOutputStream());
         outputStream.flush();
-        inputStream = new ObjectInputStream(this.socket.getInputStream());
-
-
+        logger.info("connection created for {}", socket.getInetAddress().getHostAddress());
     }
 
 
@@ -58,6 +56,9 @@ public class Connection implements Callable<Integer> {
     }
 
     public void terminate() {
+        if(terminated){
+            return;
+        }
         terminated = true;
         try {
             inputStream.close();
@@ -90,6 +91,14 @@ public class Connection implements Callable<Integer> {
 
     @Override
     public Integer call() {
+        try {
+            inputStream = new ObjectInputStream(this.socket.getInputStream());
+        } catch (IOException e) {
+            terminate();
+            logger.error("from: {} error {} {}", socket.getInetAddress().toString(), e.getClass().getSimpleName(), e.getMessage());
+            return -1;
+        }
+
         while (!terminated) {
             try {
                 logger.info("waiting for: {}", socket.getInetAddress().toString());

@@ -1,6 +1,8 @@
 package com.tora;
 
 import com.tora.handlers.IRequestHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.Socket;
@@ -8,6 +10,7 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 
 public class Service {
+    private static final Logger logger = LoggerFactory.getLogger(Service.class);
     private final ExecutorService executorService;
 
     public Service(Map<String, Connection> connections, ExecutorService executorService) {
@@ -26,9 +29,12 @@ public class Service {
     public void connect(String host, String port) throws Exception {
         Socket socket = new Socket(host, Integer.parseInt(port));
         Connection connection = new Connection(socket);
+        logger.info("Socket and connection created");
         if (connections.putIfAbsent(connection.getSocket().getInetAddress().toString(), connection) == null) {
+            logger.info("connection added");
             connection.setHandler(requestHandler);
             executorService.submit(connection);
+            logger.info("connection running");
             return;
         }
         throw new Exception("Already connected to " + host);
