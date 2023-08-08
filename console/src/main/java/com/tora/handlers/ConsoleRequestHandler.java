@@ -50,6 +50,8 @@ public class ConsoleRequestHandler implements IRequestHandler {
             } else if ("chat_message".equals((header.get("type")))) {
                 client.showConsole(sendToGroupChat(header.getString("chat_name"),
                         connection, request.getString("body")));
+            } else if ("chat_message_response".equals(header.get("type"))) {
+                client.showConsole(request.getString("body"));
             }
         }
 
@@ -75,19 +77,19 @@ public class ConsoleRequestHandler implements IRequestHandler {
 
     private JSONObject getConnectToChatResponse(Object chatName, Connection connection) {
         if (chatName == null || !groupChats.containsKey((String) chatName)) {
-            client.showConsole("Couldn't connect to  " + chatName);
+            client.showConsole(connection.getSocket().getInetAddress().getHostName() + " couldn't connect to  " + chatName);
             return JSONBuilder.create()
                     .addHeader("type", "connect_to_chat_response")
                     .addHeader("chat_name", chatName)
                     .setBody("chat name: " + chatName + " not found").build();
         }
         groupChats.get(chatName).addSubscriber(connection);
-        client.showConsole("Connected to  " + chatName);
+        client.showConsole(connection.getSocket().getInetAddress().getHostName() + " connected to " + chatName);
         return JSONBuilder.create()
                 .addHeader("type", "connect_to_chat_response")
                 .addHeader("chat_name", chatName)
                 .addHeader("status", "OK")
-                .setBody("connected to the chat")
+                .setBody("connected to " + chatName)
                 .build();
     }
 
@@ -116,10 +118,9 @@ public class ConsoleRequestHandler implements IRequestHandler {
     }
 
     private String sendToGroupChat(String chatName, Connection connection, String message) {
-        if (!groupChats.containsKey(chatName)) {
-            return "Group doesn't exists";
+        if (groupChats.containsKey(chatName)) {
+            groupChats.get(chatName).sendMessage(connection, message);
         }
-        groupChats.get(chatName).sendMessage(connection, message);
-        return "Message sent";
+        return connection.getSocket().getInetAddress().getHostAddress() + "->" + chatName + ": " + message;
     }
 }

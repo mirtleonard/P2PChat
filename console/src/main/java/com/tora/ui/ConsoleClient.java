@@ -23,6 +23,8 @@ public class ConsoleClient {
         System.out.flush();
     }
 
+    //TODO add status after giving a coomand
+    //split the function into helpers
     public void run() {
         String[] command;
         String completeCommand;
