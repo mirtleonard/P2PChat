@@ -80,6 +80,15 @@ public class ConsoleClient {
                 service.getChatsFromUser(command[1]);
                 continue;
             }
+            if ("connect_to_chat".equals(command[0])) {
+                if (command.length != 3) {
+                    System.out.println("Missing arguments(command, ip, chat_name");
+                    continue;
+                }
+                service.connectToChat(command[1], command[2]);
+                continue;
+            }
+
             if ("quit".equals(command[0])) {
                 break;
             }

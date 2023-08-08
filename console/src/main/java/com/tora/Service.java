@@ -90,4 +90,19 @@ public class Service {
             return value;
         });
     }
+
+    public void connectToChat(String host, String chatName) {
+        connections.computeIfPresent(host, (key, value) ->
+        {
+            try {
+                value.send(
+                        JSONBuilder.create()
+                                .addHeader("type", "connect_to_chat")
+                                .addHeader("chat_name", chatName).build()
+                );
+            } catch (IOException ignore) {
+            }
+            return value;
+        });
+    }
 }

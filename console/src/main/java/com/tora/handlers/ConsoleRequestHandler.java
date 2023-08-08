@@ -9,6 +9,7 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.Map;
 
 public class ConsoleRequestHandler implements IRequestHandler {
@@ -58,7 +59,32 @@ public class ConsoleRequestHandler implements IRequestHandler {
                 } catch (Exception ignore) {
                 }
             }
+
+            if ("connect_to_chat".equals(header.get("type"))) {
+                try {
+                    connection.send(getConnectToChatResponse(header.get("chat_name")));
+                } catch (IOException e) {
+                    logger.info("Error in chat members: {} {}", e.getClass().getSimpleName(), e.getMessage());
+                }
+            }
+
         }
+    }
+
+    private JSONObject getConnectToChatResponse(Object chatName) {
+        if (chatName == null || !groupChats.containsKey((String) chatName)) {
+            return JSONBuilder.create()
+                    .addHeader("type", "connect_to_chat_response")
+                    .addHeader("chat_name", chatName)
+                    .setBody("chat name: " + chatName + " not found").build();
+        }
+        subscribeToGroupChat((String) chatName);
+        return JSONBuilder.create()
+                .addHeader("type", "connect_to_chat_response")
+                .addHeader("chat_name", chatName)
+                .addHeader("status", "OK")
+                .build();
+
     }
 
     private void terminateConnection(Connection connection) {
