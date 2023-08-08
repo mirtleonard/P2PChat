@@ -88,7 +88,15 @@ public class ConsoleClient {
                 service.connectToChat(command[1], command[2]);
                 continue;
             }
-
+            if ("msg_chat".equals(command[0])) {
+                if (command.length < 4) {
+                    System.out.println("Missing arguments(command, ip, chat_name");
+                    continue;
+                }
+                service.sendMessageToChat(command[1], command[2], completeCommand
+                                .replaceFirst("[^ ]* *", "").replaceFirst("[^ ]* *", ""));
+                continue;
+            }
             if ("quit".equals(command[0])) {
                 break;
             }

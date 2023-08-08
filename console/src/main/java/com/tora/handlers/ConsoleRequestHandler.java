@@ -47,6 +47,9 @@ public class ConsoleRequestHandler implements IRequestHandler {
                 client.showConsole(request.get("body").toString());
             } else if ("get_chats_response".equals(header.get("type"))) {
                 client.showConsole("chats " + request.get("body"));
+            } else if ("chat_message".equals((header.get("type")))) {
+                client.showConsole(sendToGroupChat(header.getString("chat_name"),
+                        connection, request.getString("body")));
             }
         }
 
@@ -62,29 +65,30 @@ public class ConsoleRequestHandler implements IRequestHandler {
 
             if ("connect_to_chat".equals(header.get("type"))) {
                 try {
-                    connection.send(getConnectToChatResponse(header.get("chat_name")));
-                } catch (IOException e) {
-                    logger.info("Error in chat members: {} {}", e.getClass().getSimpleName(), e.getMessage());
+                    connection.send(getConnectToChatResponse(header.get("chat_name"), connection));
+                } catch (IOException ignore) {
                 }
             }
 
         }
     }
 
-    private JSONObject getConnectToChatResponse(Object chatName) {
+    private JSONObject getConnectToChatResponse(Object chatName, Connection connection) {
         if (chatName == null || !groupChats.containsKey((String) chatName)) {
+            client.showConsole("Couldn't connect to  " + chatName);
             return JSONBuilder.create()
                     .addHeader("type", "connect_to_chat_response")
                     .addHeader("chat_name", chatName)
                     .setBody("chat name: " + chatName + " not found").build();
         }
-        subscribeToGroupChat((String) chatName);
+        groupChats.get(chatName).addSubscriber(connection);
+        client.showConsole("Connected to  " + chatName);
         return JSONBuilder.create()
                 .addHeader("type", "connect_to_chat_response")
                 .addHeader("chat_name", chatName)
                 .addHeader("status", "OK")
+                .setBody("connected to the chat")
                 .build();
-
     }
 
     private void terminateConnection(Connection connection) {
@@ -111,10 +115,11 @@ public class ConsoleRequestHandler implements IRequestHandler {
         });
     }
 
-    private void sendToGroupChat(String nameChat, Connection connection, String message) {
-        groupChats.computeIfPresent(nameChat, (k, v) -> {
-            v.sendMessage(connection, message);
-            return v;
-        });
+    private String sendToGroupChat(String chatName, Connection connection, String message) {
+        if (!groupChats.containsKey(chatName)) {
+            return "Group doesn't exists";
+        }
+        groupChats.get(chatName).sendMessage(connection, message);
+        return "Message sent";
     }
 }

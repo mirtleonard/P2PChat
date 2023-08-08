@@ -44,6 +44,23 @@ public class Service {
         return connections.keySet().toArray(String[]::new);
     }
 
+    public void sendMessageToChat(String host, String chatName, String content) {
+        connections.computeIfPresent(host, (key, value) ->
+        {
+            try {
+                value.send(
+                        JSONBuilder.create()
+                                .addHeader("type", "chat_message")
+                                .addHeader("chat_name", chatName)
+                                .setBody(content)
+                                .build()
+                );
+            } catch (IOException ignore) {
+            }
+            return value;
+        });
+    }
+
     public void sendMessage(String to, String content) {
         connections.computeIfPresent(to, (key, value) ->
         {
