@@ -33,7 +33,7 @@ public class ConnectionHandler {
     private void submitPendingConnections() {
         while (running) {
             try {
-                Connection connection = pendingConnections.poll(1, TimeUnit.SECONDS);
+                Connection connection = pendingConnections.poll(2, TimeUnit.SECONDS);
                 if (connection == null) {
                     continue;
                 }

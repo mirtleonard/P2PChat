@@ -35,7 +35,7 @@ public class Service {
     }
 
     public String[] getAllConnections() {
-        return connections.values().stream().map(c -> c.getSocket().getInetAddress().toString()).toArray(String[]::new);
+        return connections.keySet().toArray(String[]::new);
     }
 
     public void sendMessage(String to, String content) {

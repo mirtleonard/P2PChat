@@ -2,6 +2,8 @@ package com.tora.ui;
 
 
 import com.tora.Service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.Scanner;
@@ -9,12 +11,17 @@ import java.util.Scanner;
 public class ConsoleClient {
     private final Service service;
 
+    private final Logger logger = LoggerFactory.getLogger(getClass());
+
     public ConsoleClient(Service service) {
         this.service = service;
     }
 
     public void showConsole(String console) {
+        logger.info(console);
         System.out.println(console);
+        System.out.flush();
+        System.out.print("");
     }
 
     public void run() {
@@ -22,6 +29,7 @@ public class ConsoleClient {
         String completeCommand;
         Scanner in = new Scanner(System.in);
         while (true) {
+            System.out.flush();
             completeCommand = in.nextLine().trim();
             command = completeCommand.split(" +");
             if ("connect".equals(command[0])) {
@@ -50,14 +58,14 @@ public class ConsoleClient {
                         .replaceFirst("[^ ]* *", "").replaceFirst("[^ ]* *", ""));
                 continue;
             }
-            if("terminate".equals(command[0])){
-                if(command.length != 2){
+            if ("terminate".equals(command[0])) {
+                if (command.length != 2) {
                     System.out.println("Missing arguments");
                     continue;
                 }
-                if(service.terminate(command[1])){
+                if (service.terminate(command[1])) {
                     System.out.println("Connection successfully terminated");
-                }else{
+                } else {
                     System.out.println("Connection doesnt exists");
                 }
                 continue;

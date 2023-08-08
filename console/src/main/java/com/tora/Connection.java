@@ -2,6 +2,8 @@ package com.tora;
 
 import com.tora.handlers.IRequestHandler;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -12,6 +14,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.concurrent.Callable;
 
 public class Connection implements Callable<Integer> {
+    Logger logger = LoggerFactory.getLogger(Connection.class);
     private volatile boolean terminated;
     private final Socket socket;
 
@@ -54,12 +57,14 @@ public class Connection implements Callable<Integer> {
             outputStream.close();
             socket.close();
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            logger.error("while closing error {} {}", e.getClass().getSimpleName(), e.getMessage());
         }
+        logger.info("connection {} closed", socket.getInetAddress().toString());
     }
 
     public void send(JSONObject jsonObject) throws IOException {
         synchronized (outputStream) {
+            logger.info("sending To: {} JsonObject: {}", socket.getInetAddress().toString(), jsonObject.toString());
             outputStream.writeObject(jsonObject.toString());
             outputStream.flush();
         }
@@ -69,7 +74,9 @@ public class Connection implements Callable<Integer> {
     public Integer call() {
         try {
             while (!terminated) {
-                handler.handle(new JSONObject((String) inputStream.readObject()), this);
+                JSONObject tmp = new JSONObject((String) inputStream.readObject());
+                logger.info("getting From: {} JsonObject: {}", socket.getInetAddress().toString(), tmp);
+                handler.handle(tmp, this);
             }
         } catch (Exception e) {
             terminated = true;
