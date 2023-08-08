@@ -1,6 +1,7 @@
 package com.tora;
 
 import com.tora.handlers.IRequestHandler;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,6 +12,7 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Date;
 import java.util.concurrent.Callable;
 
 public class Connection implements Callable<Integer> {
@@ -34,7 +36,7 @@ public class Connection implements Callable<Integer> {
         try {
             this.handler.handle(JSONBuilder
                     .create()
-                    .addHeader("type", "connect")
+                    .addHeader("type", "local_connect")
                     .addHeader("host", socket.getInetAddress().getHostAddress())
                     .addHeader("timestamp", LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME))
                     .build(), this);
@@ -60,6 +62,12 @@ public class Connection implements Callable<Integer> {
             logger.error("while closing error {} {}", e.getClass().getSimpleName(), e.getMessage());
         }
         logger.info("connection {} closed", socket.getInetAddress().toString());
+        this.handler.handle(JSONBuilder
+                .create()
+                .addHeader("type", "local_disconnect")
+                .addHeader("host", socket.getInetAddress().toString())
+                .addHeader("timestamp", LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME))
+                .build(), this);
     }
 
     public void send(JSONObject jsonObject) throws IOException {
@@ -67,20 +75,22 @@ public class Connection implements Callable<Integer> {
             logger.info("sending To: {} JsonObject: {}", socket.getInetAddress().toString(), jsonObject.toString());
             outputStream.writeObject(jsonObject.toString());
             outputStream.flush();
+            logger.info("sent");
         }
     }
 
     @Override
     public Integer call() {
-        try {
-            while (!terminated) {
+        while (!terminated) {
+            try {
                 JSONObject tmp = new JSONObject((String) inputStream.readObject());
                 logger.info("getting From: {} JsonObject: {}", socket.getInetAddress().toString(), tmp);
                 handler.handle(tmp, this);
+            }catch (JSONException ignore) {
+            } catch (Exception e) {
+                terminated = true;
+                return -1;
             }
-        } catch (Exception e) {
-            terminated = true;
-            return -1;
         }
         return 0;
     }

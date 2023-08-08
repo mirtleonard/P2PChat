@@ -66,7 +66,7 @@ public class ConsoleClient {
                 if (service.terminate(command[1])) {
                     System.out.println("Connection successfully terminated");
                 } else {
-                    System.out.println("Connection doesnt exists");
+                    System.out.println("Connection doesn't exists");
                 }
                 continue;
             }

@@ -19,17 +19,17 @@ public class ConsoleRequestHandler implements IRequestHandler {
     public synchronized void handle(JSONObject request, Connection connection) {
         logger.info("Handling request {}", request.toString());
         JSONObject header = new JSONObject(request.getString("header"));
-
-        if (header.has("type")) {
-            if ("terminate".equals(header.get("type"))) {
-                terminateConnection(connection);
-                return;
-            }
+        if (!header.has("type")) {
+            logger.info("JSON object doesn't have type");
+            return;
         }
-        if (header.has("type")) {
-            if ("message".equals(header.get("type"))) {
-                client.showConsole((String) request.get("body"));
-            }
+
+        if ("terminate".equals(header.get("type"))) {
+            terminateConnection(connection);
+        } else if ("connect".equals(header.get("type"))) {
+            client.showConsole("connected with" + connection.getSocket().getInetAddress().getHostAddress());
+        } else if ("message".equals(header.get("type"))) {
+            client.showConsole((String) request.get("body"));
         }
     }
 
