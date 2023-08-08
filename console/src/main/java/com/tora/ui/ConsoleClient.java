@@ -21,7 +21,6 @@ public class ConsoleClient {
         logger.info(console);
         System.out.println(console);
         System.out.flush();
-        System.out.print("");
     }
 
     public void run() {
@@ -42,7 +41,6 @@ public class ConsoleClient {
                 } catch (Exception e) {
                     System.out.println(e);
                 }
-
                 continue;
             }
             if ("printAll".equals(command[0])) {
@@ -63,11 +61,7 @@ public class ConsoleClient {
                     System.out.println("Missing arguments");
                     continue;
                 }
-                if (service.terminate(command[1])) {
-                    System.out.println("Connection successfully terminated");
-                } else {
-                    System.out.println("Connection doesn't exists");
-                }
+                service.terminate(command[1]);
                 continue;
             }
             if ("quit".equals(command[0])) {

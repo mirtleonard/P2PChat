@@ -40,7 +40,8 @@ public class Connection implements Callable<Integer> {
                     .addHeader("host", socket.getInetAddress().getHostAddress())
                     .addHeader("timestamp", LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME))
                     .build(), this);
-        } catch (Exception ignore) {
+        } catch (Exception exception) {
+            logger.error("on ");
         }
     }
 

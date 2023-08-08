@@ -18,6 +18,10 @@ public class ConsoleRequestHandler implements IRequestHandler {
     @Override
     public synchronized void handle(JSONObject request, Connection connection) {
         logger.info("Handling request {}", request.toString());
+        if(!request.has("header")){
+            logger.info("header missing");
+            return;
+        }
         JSONObject header = new JSONObject(request.getString("header"));
         if (!header.has("type")) {
             logger.info("JSON object doesn't have type");
@@ -26,10 +30,12 @@ public class ConsoleRequestHandler implements IRequestHandler {
 
         if ("terminate".equals(header.get("type"))) {
             terminateConnection(connection);
-        } else if ("connect".equals(header.get("type"))) {
-            client.showConsole("connected with" + connection.getSocket().getInetAddress().getHostAddress());
+        } else if ("local_connect".equals(header.get("type"))) {
+            client.showConsole("connected with " + connection.getSocket().getInetAddress().getHostAddress());
         } else if ("message".equals(header.get("type"))) {
             client.showConsole((String) request.get("body"));
+        }else if ("local_disconnect".equals(header.get("type"))){
+            client.showConsole("disconnect from " + connection.getSocket().getInetAddress().getHostAddress());
         }
     }
 

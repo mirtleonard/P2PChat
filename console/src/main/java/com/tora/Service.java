@@ -49,14 +49,14 @@ public class Service {
         });
     }
 
-    public boolean terminate(String connection){
-        return connections.computeIfPresent(connection,(key, value) ->{
+    public void terminate(String connection){
+        connections.computeIfPresent(connection,(key, value) ->{
            try{
                value.send(JSONBuilder.create().addHeader("type", "terminate").build());
                value.terminate();
            }catch (IOException ignore){
            }
            return value;
-        }) == null;
+        });
     }
 }
