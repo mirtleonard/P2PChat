@@ -74,8 +74,8 @@ public class UDPBroadcast implements Runnable {
                     logger.info("Coudn't get local host address");
                 }
 
-                logger.info("Packet received from: {}; Size: {}", sender, data.length);
                 String message = new String(data);
+                logger.info("Packet received from: {}; message: {}", sender, message);
                 if ("connected".equals(message)) {
                     Socket userSocket = new Socket(sender, packet.getPort());
                     Connection connection = new Connection(userSocket);
