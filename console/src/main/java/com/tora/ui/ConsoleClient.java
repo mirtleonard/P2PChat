@@ -102,7 +102,7 @@ public class ConsoleClient {
                 continue;
             }
             if ("broadcast".equals(command[0])) {
-                service.sendToBrodcast("Hello!");
+                service.sendToBrodcast("who is connected?");
                 continue;
             }
             if ("quit".equals(command[0])) {
