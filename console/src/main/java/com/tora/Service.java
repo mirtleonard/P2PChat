@@ -30,7 +30,7 @@ public class Service {
         Socket socket = new Socket(host, Integer.parseInt(port));
         Connection connection = new Connection(socket);
         logger.info("Socket and connection created");
-        if (connections.putIfAbsent(connection.getSocket().getInetAddress().toString(), connection) == null) {
+        if (connections.putIfAbsent(connection.getSocket().getInetAddress().toString() + ":" + connection.getSocket().getPort(), connection) == null) {
             logger.info("connection added");
             connection.setHandler(requestHandler);
             executorService.submit(connection);
@@ -44,22 +44,7 @@ public class Service {
         return connections.keySet().toArray(String[]::new);
     }
 
-    public void sendMessageToChat(String host, String chatName, String content) {
-        connections.computeIfPresent(host, (key, value) ->
-        {
-            try {
-                value.send(
-                        JSONBuilder.create()
-                                .addHeader("type", "chat_message")
-                                .addHeader("chat_name", chatName)
-                                .setBody(content)
-                                .build()
-                );
-            } catch (IOException ignore) {
-            }
-            return value;
-        });
-    }
+
 
     public void sendMessage(String to, String content) {
         connections.computeIfPresent(to, (key, value) ->
@@ -116,6 +101,22 @@ public class Service {
                         JSONBuilder.create()
                                 .addHeader("type", "connect_to_chat")
                                 .addHeader("chat_name", chatName).build()
+                );
+            } catch (IOException ignore) {
+            }
+            return value;
+        });
+    }
+    public void sendMessageToChat(String host, String chatName, String content) {
+        connections.computeIfPresent(host, (key, value) ->
+        {
+            try {
+                value.send(
+                        JSONBuilder.create()
+                                .addHeader("type", "chat_message")
+                                .addHeader("chat_name", chatName)
+                                .setBody(content)
+                                .build()
                 );
             } catch (IOException ignore) {
             }

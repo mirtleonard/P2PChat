@@ -34,7 +34,7 @@ public class ConnectionHandler {
         while (running) {
             try {
                 Connection connection = pendingConnections.take();
-                if (connections.putIfAbsent(connection.getSocket().getInetAddress().toString(), connection) == null) {
+                if (connections.putIfAbsent(connection.getSocket().getInetAddress().toString()+":"+connection.getSocket().getPort(), connection) == null) {
                     logger.info("Connection {} added", connection.getSocket().getInetAddress().toString());
                     connection.setHandler(requestHandler);
                     executorService.submit(connection);

@@ -44,7 +44,7 @@ public class ConsoleRequestHandler implements IRequestHandler {
 
         if (request.has("body")) {
             if ("message".equals(header.get("type"))) {
-                client.showConsole(request.get("body").toString());
+                client.showConsole(processMessage(request, connection));
             } else if ("get_chats_response".equals(header.get("type"))) {
                 client.showConsole("chats " + request.get("body"));
             } else if ("chat_message".equals((header.get("type")))) {
@@ -75,12 +75,23 @@ public class ConsoleRequestHandler implements IRequestHandler {
         }
     }
 
+    private String processMessage(JSONObject request, Connection connection) {
+        JSONObject header = request.getJSONObject("header");
+        if (!header.has("chat_name")) {
+            String host = connection.getSocket().getInetAddress().getHostAddress() +
+                    ":" + connection.getSocket().getPort();
+            return host + ": " + request.get("body");
+        }
+        return header.get("from").toString() + "->" + header.get("chat_name").toString() + ": " + request.get("body").toString();
+    }
+
     private JSONObject getConnectToChatResponse(Object chatName, Connection connection) {
         if (chatName == null || !groupChats.containsKey((String) chatName)) {
             client.showConsole(connection.getSocket().getInetAddress().getHostName() + " couldn't connect to  " + chatName);
             return JSONBuilder.create()
                     .addHeader("type", "connect_to_chat_response")
                     .addHeader("chat_name", chatName)
+                    .addHeader("status", "ERROR")
                     .setBody("chat name: " + chatName + " not found").build();
         }
         groupChats.get(chatName).addSubscriber(connection);
@@ -118,8 +129,17 @@ public class ConsoleRequestHandler implements IRequestHandler {
     }
 
     private String sendToGroupChat(String chatName, Connection connection, String message) {
-        if (groupChats.containsKey(chatName)) {
-            groupChats.get(chatName).sendMessage(connection, message);
+
+        if (groupChats.computeIfPresent(chatName, (k,v)->{v.sendMessage(connection, message); return v;}) == null){
+            return connection.getSocket().getInetAddress().getHostAddress() + "-> invalid chat name";
+        }
+        try {
+            connection
+                    .send(JSONBuilder.create()
+                            .addHeader("type", "chat_message_response")
+                            .addHeader("chat_name", chatName)
+                            .setBody("message sent to " + chatName).build());
+        } catch (IOException ignore) {
         }
         return connection.getSocket().getInetAddress().getHostAddress() + "->" + chatName + ": " + message;
     }
