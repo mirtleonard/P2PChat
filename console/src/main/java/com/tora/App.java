@@ -24,6 +24,10 @@ public class App {
         service.setRequestHandler(consoleRequestHandler);
 
         BlockingQueue<Connection> connectionBlockingQueue = new LinkedBlockingQueue<>();
+        UDPBroadcast brodcast = new UDPBroadcast(connectionBlockingQueue);
+        service.setBrodcast(brodcast);
+        executorService.submit(brodcast);
+
         ConnectionHandler connectionHandler = new ConnectionHandler(connectionBlockingQueue,
                 connections,
                 consoleRequestHandler,

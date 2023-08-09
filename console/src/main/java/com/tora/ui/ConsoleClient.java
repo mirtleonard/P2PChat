@@ -101,9 +101,10 @@ public class ConsoleClient {
                         .replaceFirst("[^ ]* *", ""));
                 continue;
             }
-            /*if ("flood".equals(command[0])){
-                if(command.length != 2){
-            }*/
+            if ("broadcast".equals(command[0])) {
+                service.sendToBrodcast("Hello!");
+                continue;
+            }
             if ("quit".equals(command[0])) {
                 break;
             }

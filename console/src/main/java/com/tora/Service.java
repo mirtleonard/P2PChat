@@ -5,19 +5,26 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.net.Socket;
-import java.util.Map;
+import java.net.*;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 
 public class Service {
     private static final Logger logger = LoggerFactory.getLogger(Service.class);
     private final ExecutorService executorService;
+    private UDPBroadcast brodcast;
 
     public Service(Map<String, Connection> connections, ExecutorService executorService) {
         this.connections = connections;
         this.executorService = executorService;
     }
 
+    public void setBrodcast(UDPBroadcast brodcast) {
+        this.brodcast = brodcast;
+    }
+    public void sendToBrodcast(String message) {
+        brodcast.sendPackage(message.getBytes());
+    }
     private final Map<String, Connection> connections;
 
     private IRequestHandler requestHandler;

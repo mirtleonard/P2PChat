@@ -113,7 +113,7 @@ public class ConsoleRequestHandler implements IRequestHandler {
     public void setGroupChats(Map<String, GroupChat> groupChats) {
         this.groupChats = groupChats;
     }
-
+///terminate /10.4.0.132:45702
     private void subscribeToGroupChat(String nameChat, Connection connection) {
         groupChats.computeIfPresent(nameChat, (k, v) -> {
             v.addSubscriber(connection);
