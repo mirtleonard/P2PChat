@@ -13,8 +13,14 @@ public class UDPBroadcast implements Runnable {
     private final static Logger logger = LoggerFactory.getLogger(UDPBroadcast.class);
     private final BlockingQueue<Connection> pendingConnections;
 
+    private String port;
+
     UDPBroadcast(BlockingQueue<Connection> queue) {
         pendingConnections = queue;
+    }
+
+    public void setPort(int port) {
+        this.port = String.valueOf(port);
     }
 
     public void terminate() {
@@ -71,12 +77,11 @@ public class UDPBroadcast implements Runnable {
                 logger.info("Packet received from: {}; Size: {}", sender, data.length);
                 String message = new String(data);
                 if ("connected".equals(message)) {
-                    Socket userSocket = new Socket();
-                    userSocket.connect(packet.getSocketAddress());
+                    Socket userSocket = new Socket(sender, packet.getPort());
                     Connection connection = new Connection(userSocket);
                     pendingConnections.add(connection);
-                } else if ("who is connected?".equals(message)) {
-                    sendPackage("connected".getBytes());
+                } else if ("who can connect?".equals(message)) {
+                    sendPackage(port.getBytes());
                 }
             }
         } catch (IOException e) {

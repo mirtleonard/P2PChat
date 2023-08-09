@@ -38,6 +38,7 @@ public class App {
         System.out.print("Listening port: ");
         try {
             port = scanner.nextInt();
+            brodcast.setPort(port);
             connectionHandler.listen(port);
         } catch (InputMismatchException e) {
             System.out.println("Port should be a number");
