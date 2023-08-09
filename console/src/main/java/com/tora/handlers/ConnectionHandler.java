@@ -47,7 +47,7 @@ public class ConnectionHandler {
                             }
                             connectedIps.add(connection.getSocket().getInetAddress().toString());
                             return connection;
-                        }) == null) {
+                        }) != null) {
                     logger.info("Connection {} added", connection.getSocket().getInetAddress().toString());
                     connection.setHandler(requestHandler);
                     executorService.submit(connection);
