@@ -7,16 +7,17 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.net.*;
 import java.util.*;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 
 public class Service {
     private static final Logger logger = LoggerFactory.getLogger(Service.class);
-    private final ExecutorService executorService;
+    private final BlockingQueue<Connection> pendingConections;
     private UDPBroadcast brodcast;
 
-    public Service(Map<String, Connection> connections, ExecutorService executorService) {
+    public Service(Map<String, Connection> connections, BlockingQueue<Connection> queue) {
         this.connections = connections;
-        this.executorService = executorService;
+        pendingConections = queue;
     }
 
     public void setBrodcast(UDPBroadcast brodcast) {
@@ -27,23 +28,11 @@ public class Service {
     }
     private final Map<String, Connection> connections;
 
-    private IRequestHandler requestHandler;
-
-    public void setRequestHandler(IRequestHandler requestHandler) {
-        this.requestHandler = requestHandler;
-    }
-
     public void connect(String host, String port) throws Exception {
         Socket socket = new Socket(host, Integer.parseInt(port));
         Connection connection = new Connection(socket);
         logger.info("Socket and connection created");
-        if (connections.putIfAbsent(connection.getSocket().getInetAddress().toString() + ":" + connection.getSocket().getPort(), connection) == null) {
-            logger.info("connection added");
-            connection.setHandler(requestHandler);
-            executorService.submit(connection);
-            logger.info("connection running");
-            return;
-        }
+        pendingConections.put(connection);
         throw new Exception("Already connected to " + host);
     }
 

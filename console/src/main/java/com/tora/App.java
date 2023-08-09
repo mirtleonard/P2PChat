@@ -13,17 +13,16 @@ public class App {
     public static void main(String[] args) throws Exception {
         Map<String, GroupChat> groupChats = new ConcurrentHashMap<>();
 
+        BlockingQueue<Connection> connectionBlockingQueue = new LinkedBlockingQueue<>();
         ExecutorService executorService = Executors.newCachedThreadPool();
         Map<String, Connection> connections = new ConcurrentHashMap<>();
 
-        Service service = new Service(connections, executorService);
+        Service service = new Service(connections, connectionBlockingQueue);
         service.setGroupChats(groupChats);
         ConsoleClient consoleClient = new ConsoleClient(service);
         ConsoleRequestHandler consoleRequestHandler = new ConsoleRequestHandler(consoleClient);
         consoleRequestHandler.setGroupChats(groupChats);
-        service.setRequestHandler(consoleRequestHandler);
 
-        BlockingQueue<Connection> connectionBlockingQueue = new LinkedBlockingQueue<>();
         UDPBroadcast brodcast = new UDPBroadcast(connectionBlockingQueue);
         service.setBrodcast(brodcast);
         executorService.submit(brodcast);

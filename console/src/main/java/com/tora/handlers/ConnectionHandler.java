@@ -6,13 +6,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public class ConnectionHandler {
     private static final Logger logger = LoggerFactory.getLogger(ConnectionHandler.class);
+    private final Set<String> connectedIps = Collections.synchronizedSet(new HashSet<String>());
     private final ExecutorService executorService;
     private final BlockingQueue<Connection> pendingConnections;
     private final Map<String, Connection> connections;
@@ -34,7 +39,15 @@ public class ConnectionHandler {
         while (running) {
             try {
                 Connection connection = pendingConnections.take();
-                if (connections.putIfAbsent(connection.getSocket().getInetAddress().toString()+":"+connection.getSocket().getPort(), connection) == null) {
+
+                if (connections.computeIfAbsent(connection.getSocket().getInetAddress().toString() + ":" + connection.getSocket().getPort(),
+                        k -> {
+                            if (connectedIps.contains(connection.getSocket().getInetAddress().toString()))  {
+                                return null;
+                            }
+                            connectedIps.add(connection.getSocket().getInetAddress().toString());
+                            return connection;
+                        }) == null) {
                     logger.info("Connection {} added", connection.getSocket().getInetAddress().toString());
                     connection.setHandler(requestHandler);
                     executorService.submit(connection);
@@ -49,7 +62,13 @@ public class ConnectionHandler {
         while (running) {
             synchronized (connections) {
                 int before = connections.size();
-                connections.values().removeIf(Connection::isTerminated);
+                connections.values().removeIf(k -> {
+                    if (k.isTerminated()) {
+                        connectedIps.remove(k.getSocket().getInetAddress().toString());
+                        return true;
+                    }
+                    return false;
+                });
                 if (before - connections.size() > 0) {
                     logger.info("Cleanup deleted {} connections", before - connections.size());
                 }
