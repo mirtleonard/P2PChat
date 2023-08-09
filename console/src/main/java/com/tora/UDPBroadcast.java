@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.net.*;
 import java.util.Arrays;
+import java.util.Enumeration;
 import java.util.concurrent.BlockingQueue;
 
 public class UDPBroadcast implements Runnable {
@@ -66,26 +67,35 @@ public class UDPBroadcast implements Runnable {
                 String sender = packet.getAddress().getHostAddress();
 
                 // if received message is from myself, skip
-                try {
-                    if (sender.equals(InetAddress.getLocalHost().getHostAddress())) {
-                        continue;
-                    }
-                } catch (UnknownHostException e) {
-                    logger.info("Coudn't get local host address");
+                if (checkSelf(sender)) {
+                   continue;
                 }
 
                 String message = new String(data);
                 logger.info("Packet received from: {}; message: {}", sender, message);
-                if ("connected".equals(message)) {
-                    Socket userSocket = new Socket(sender, packet.getPort());
+                if ("who can connect?".equals(message)) {
+                    sendPackage(port.getBytes());
+                } else {
+                    Socket userSocket = new Socket(sender, Integer.parseInt(message));
                     Connection connection = new Connection(userSocket);
                     pendingConnections.add(connection);
-                } else if ("who can connect?".equals(message)) {
-                    sendPackage(port.getBytes());
                 }
             }
         } catch (IOException e) {
             logger.info("Error: {}", e.getMessage());
         }
+    }
+
+    private static boolean checkSelf(String sender) throws SocketException {
+        Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
+        while (interfaces.hasMoreElements()) {
+            Enumeration<InetAddress> address =  interfaces.nextElement().getInetAddresses();
+            while (address.hasMoreElements()) {
+                if (address.nextElement().getHostAddress().equals(sender)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 }
