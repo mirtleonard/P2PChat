@@ -1,34 +1,32 @@
 package com.tora.ui;
-
-
 import com.tora.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
+import java.io.IOException;
 import java.util.Arrays;
+import java.util.InputMismatchException;
 import java.util.Scanner;
 
+@Component
 public class ConsoleClient {
     private final Service service;
 
     private static final Logger logger = LoggerFactory.getLogger(ConsoleClient.class);
 
-    public ConsoleClient(Service service) {
+    public ConsoleClient(@Autowired Service service) {
         this.service = service;
     }
 
-    public void showConsole(String console) {
-        logger.info(console);
-        System.out.println(console);
-        System.out.flush();
-    }
-
-    //TODO add status after giving a coomand
-    //split the function into helpers
-    public void run() {
+    public void run() throws IOException, InterruptedException {
+        Scanner in = new Scanner(System.in);
+        if (!readValidPort(in)) {
+            return;
+        }
         String[] command;
         String completeCommand;
-        Scanner in = new Scanner(System.in);
         while (true) {
             System.out.flush();
             completeCommand = in.nextLine().trim();
@@ -109,6 +107,23 @@ public class ConsoleClient {
             }
             System.out.println("Unknown command");
         }
+        service.shutDown();
+    }
+
+    private boolean readValidPort(Scanner in) {
+        System.out.print("Listening port: ");
+        try {
+            service.listenPort(in.nextInt());
+        } catch (InputMismatchException e) {
+            System.out.println("Port should be a number");
+            System.out.println("Terminating...");
+            return false;
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            System.out.println("Terminating...");
+            return false;
+        }
+        return true;
     }
 
 }

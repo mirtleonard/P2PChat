@@ -1,14 +1,13 @@
-package com.tora;
+package com.tora.model;
 
+import com.tora.utils.JSONBuilder;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.List;
 
 public class GroupChat {
     private final String name;

@@ -1,53 +1,46 @@
 package com.tora;
 
-import com.tora.handlers.IRequestHandler;
+import com.tora.handlers.ConnectionHandler;
+import com.tora.handlers.ConsoleRequestHandler;
+import com.tora.model.GroupChat;
+import com.tora.utils.JSONBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.net.Socket;
-import java.util.Map;
-import java.util.concurrent.ExecutorService;
 
+@org.springframework.stereotype.Service
 public class Service {
     private static final Logger logger = LoggerFactory.getLogger(Service.class);
-    private final ExecutorService executorService;
 
-    public Service(Map<String, Connection> connections, ExecutorService executorService) {
-        this.connections = connections;
-        this.executorService = executorService;
+    private final ConnectionHandler connectionHandler;
+
+    private final ConsoleRequestHandler requestHandler;
+
+    public void shutDown() throws IOException, InterruptedException {
+        connectionHandler.shutdown();
     }
-
-    private final Map<String, Connection> connections;
-
-    private IRequestHandler requestHandler;
-
-    public void setRequestHandler(IRequestHandler requestHandler) {
+    public Service(ConnectionHandler connectionHandler, ConsoleRequestHandler requestHandler) {
+        this.connectionHandler = connectionHandler;
         this.requestHandler = requestHandler;
     }
 
+    public void listenPort(int port) throws Exception {
+        connectionHandler.listen(port);
+    }
+
     public void connect(String host, String port) throws Exception {
-        Socket socket = new Socket(host, Integer.parseInt(port));
-        Connection connection = new Connection(socket);
-        logger.info("Socket and connection created");
-        if (connections.putIfAbsent(connection.getSocket().getInetAddress().toString() + ":" + connection.getSocket().getPort(), connection) == null) {
-            logger.info("connection added");
-            connection.setHandler(requestHandler);
-            executorService.submit(connection);
-            logger.info("connection running");
-            return;
-        }
-        throw new Exception("Already connected to " + host);
+        connectionHandler.addPendingConnection(host, port);
     }
 
     public String[] getAllConnections() {
-        return connections.keySet().toArray(String[]::new);
+        return connectionHandler.getConnections().keySet().toArray(String[]::new);
     }
 
 
 
     public void sendMessage(String to, String content) {
-        connections.computeIfPresent(to, (key, value) ->
+        connectionHandler.getConnections().computeIfPresent(to, (key, value) ->
         {
             try {
                 value.send(JSONBuilder.create().addHeader("type", "message").setBody(content).build());
@@ -58,7 +51,7 @@ public class Service {
     }
 
     public void terminate(String connection){
-        connections.computeIfPresent(connection,(key, value) ->{
+        connectionHandler.getConnections().computeIfPresent(connection,(key, value) ->{
            try{
                value.send(JSONBuilder.create().addHeader("type", "terminate").build());
                value.terminate();
@@ -68,22 +61,17 @@ public class Service {
         });
     }
 
-    private Map<String, GroupChat> groupChats;
-
-    public void setGroupChats(Map<String, GroupChat> groupChats){
-        this.groupChats = groupChats;
-    }
 
     public void createChat(String name){
-        groupChats.putIfAbsent(name, new GroupChat(name));
+        requestHandler.getGroupChats().putIfAbsent(name, new GroupChat(name));
     }
 
     public void removeChat(String name){
-        groupChats.remove(name);
+        requestHandler.getGroupChats().remove(name);
     }
 
     public void getChatsFromUser(String host){
-        connections.computeIfPresent(host, (key, value) ->
+        connectionHandler.getConnections().computeIfPresent(host, (key, value) ->
         {
             try {
                 value.send(JSONBuilder.create().addHeader("type", "get_chats").build());
@@ -94,7 +82,7 @@ public class Service {
     }
 
     public void connectToChat(String host, String chatName) {
-        connections.computeIfPresent(host, (key, value) ->
+        connectionHandler.getConnections().computeIfPresent(host, (key, value) ->
         {
             try {
                 value.send(
@@ -108,7 +96,7 @@ public class Service {
         });
     }
     public void sendMessageToChat(String host, String chatName, String content) {
-        connections.computeIfPresent(host, (key, value) ->
+        connectionHandler.getConnections().computeIfPresent(host, (key, value) ->
         {
             try {
                 value.send(

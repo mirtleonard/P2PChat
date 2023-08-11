@@ -1,5 +1,6 @@
 package com.tora;
 
+import com.tora.model.Connection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -8,6 +9,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
+
 
 public class Listener implements Callable<Integer> {
     private static final Logger logger = LoggerFactory.getLogger(Listener.class);

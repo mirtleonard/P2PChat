@@ -1,25 +1,25 @@
 package com.tora.handlers;
 
-import com.tora.Connection;
-import com.tora.GroupChat;
-import com.tora.JSONBuilder;
-import com.tora.ui.ConsoleClient;
+import com.tora.model.Connection;
+import com.tora.model.GroupChat;
+import com.tora.utils.JSONBuilder;
+import com.tora.ui.ConsoleOut;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 
+@Component
 public class ConsoleRequestHandler implements IRequestHandler {
     private static final Logger logger = LoggerFactory.getLogger(ConsoleRequestHandler.class);
 
-    private final ConsoleClient client;
+    private final ConsoleOut client = new ConsoleOut();
 
-    public ConsoleRequestHandler(ConsoleClient client) {
-        this.client = client;
-    }
 
     @Override
     public synchronized void handle(JSONObject request, Connection connection) {
@@ -108,7 +108,11 @@ public class ConsoleRequestHandler implements IRequestHandler {
         connection.terminate();
     }
 
-    private Map<String, GroupChat> groupChats;
+    private Map<String, GroupChat> groupChats = new HashMap<String, GroupChat>();
+
+    public Map<String, GroupChat> getGroupChats() {
+        return groupChats;
+    }
 
     public void setGroupChats(Map<String, GroupChat> groupChats) {
         this.groupChats = groupChats;

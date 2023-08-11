@@ -1,7 +1,7 @@
-package com.tora;
+package com.tora.model;
 
+import com.tora.utils.JSONBuilder;
 import com.tora.handlers.IRequestHandler;
-import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,7 +12,6 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Date;
 import java.util.concurrent.Callable;
 
 public class Connection implements Callable<Integer> {

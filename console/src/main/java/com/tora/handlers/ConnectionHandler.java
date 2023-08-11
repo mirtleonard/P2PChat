@@ -1,33 +1,50 @@
 package com.tora.handlers;
 
-import com.tora.Connection;
+import com.tora.model.Connection;
 import com.tora.Listener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.net.Socket;
 import java.util.Map;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
+@Component
 public class ConnectionHandler {
     private static final Logger logger = LoggerFactory.getLogger(ConnectionHandler.class);
-    private final ExecutorService executorService;
-    private final BlockingQueue<Connection> pendingConnections;
+    private final ExecutorService executorService = Executors.newCachedThreadPool();
+    private final BlockingQueue<Connection> pendingConnections = new LinkedBlockingQueue<>();
     private final Map<String, Connection> connections;
     private Listener listener;
 
     private volatile boolean running = true;
     private final IRequestHandler requestHandler;
 
-    public ConnectionHandler(BlockingQueue<Connection> pendingConnections,
-                             Map<String, Connection> connections,
-                             IRequestHandler requestHandler, ExecutorService executorService) {
-        this.pendingConnections = pendingConnections;
+    public Map<String, Connection> getConnections() {
+        return connections;
+    }
+
+    public void addPendingConnection(String host, String port) throws Exception {
+        Socket socket = new Socket(host, Integer.parseInt(port));
+        Connection connection = new Connection(socket);
+        logger.info("Socket and connection created");
+        if (connections.putIfAbsent(connection.getSocket().getInetAddress().toString() + ":" + connection.getSocket().getPort(), connection) == null) {
+            logger.info("connection added");
+            connection.setHandler(requestHandler);
+            executorService.submit(connection);
+            logger.info("connection running");
+            return;
+        }
+        throw new Exception("Already connected to " + host);
+    }
+
+    public ConnectionHandler(@Autowired Map<String, Connection> connections,
+                             @Autowired IRequestHandler requestHandler) {
         this.connections = connections;
         this.requestHandler = requestHandler;
-        this.executorService = executorService;
     }
 
     private void submitPendingConnections() {
