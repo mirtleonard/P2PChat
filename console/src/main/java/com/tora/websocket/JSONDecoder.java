@@ -3,9 +3,9 @@ package com.tora.websocket;
 import org.apache.logging.log4j.Logger;
 import org.json.JSONObject;
 
-import javax.websocket.DecodeException;
-import javax.websocket.Decoder;
-import javax.websocket.EndpointConfig;
+import jakarta.websocket.DecodeException;
+import jakarta.websocket.Decoder;
+import jakarta.websocket.EndpointConfig;
 
 
 public class JSONDecoder implements Decoder.Text<JSONObject> {

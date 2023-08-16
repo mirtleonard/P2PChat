@@ -1,4 +1,4 @@
-package com.tora.websocket;
+package com.tora.service;
 
 public interface IService {
     public void connectToGroupChat(String host, String chatName) throws Exception;

@@ -1,12 +1,10 @@
 package com.tora.ui;
-import com.tora.Service;
-import com.tora.websocket.IService;
+import com.tora.service.IService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.InputMismatchException;
 import java.util.Scanner;
@@ -23,9 +21,11 @@ public class ConsoleClient {
 
     public void run() throws Exception {
         Scanner in = new Scanner(System.in);
+        /*
         if (!readValidPort(in)) {
             return;
         }
+        */
         String[] command;
         String completeCommand;
         while (true) {

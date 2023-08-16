@@ -1,18 +1,18 @@
-package com.tora;
+package com.tora.service;
 
 import com.tora.handlers.ConnectionHandler;
 import com.tora.handlers.ConsoleRequestHandler;
 import com.tora.model.GroupChat;
 import com.tora.utils.JSONBuilder;
-import com.tora.websocket.IService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 
-@org.springframework.stereotype.Service
-public class Service implements IService {
-    private static final Logger logger = LoggerFactory.getLogger(Service.class);
+@Component
+public class BasicSocketService implements IService {
+    private static final Logger logger = LoggerFactory.getLogger(BasicSocketService.class);
 
     private final ConnectionHandler connectionHandler;
 
@@ -21,7 +21,7 @@ public class Service implements IService {
     public void terminate() throws IOException, InterruptedException {
         connectionHandler.shutdown();
     }
-    public Service(ConnectionHandler connectionHandler, ConsoleRequestHandler requestHandler) {
+    public BasicSocketService(ConnectionHandler connectionHandler, ConsoleRequestHandler requestHandler) {
         this.connectionHandler = connectionHandler;
         this.requestHandler = requestHandler;
     }
