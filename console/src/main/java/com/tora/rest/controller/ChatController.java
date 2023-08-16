@@ -15,12 +15,12 @@ public class ChatController {
 
     @GetMapping("/connections")
     public String[] connections() {
-       return service.getAllConnections();
+       return service.getConnections();
     }
     @PostMapping("/connect")
-    public ResponseEntity<String> connectToIp(@RequestBody ConnectionDTO data) {
+    public ResponseEntity<String> connectToChat(@RequestBody ConnectionDTO data) {
         try {
-            service.connect(data.host, data.port);
+            service.connectToChat(data.host, data.port);
         } catch (Exception e) {
             return new ResponseEntity<>("ip not found", HttpStatus.BAD_REQUEST);
         }
@@ -35,13 +35,13 @@ public class ChatController {
 
    @PostMapping("/{id}/send-message")
    public ResponseEntity<String> sendMessage(@PathVariable(value="id") String host, @RequestBody String message) {
-        service.sendMessage("/" + host, message);
+        service.sendMessageToChat("/" + host, message);
         return new ResponseEntity<>("message sent!", HttpStatus.OK);
    }
 
    @DeleteMapping("{id}/close-connection")
-   public ResponseEntity<String> sendMessage(@PathVariable(value="id") String host) {
-        service.terminate("/" + host) ;
+   public ResponseEntity<String> closeConnection(@PathVariable(value="id") String host) {
+        service.closeConnection("/" + host) ;
         return new ResponseEntity<>("connection closed!", HttpStatus.OK);
    }
 
@@ -53,7 +53,7 @@ public class ChatController {
 
    @PostMapping("/{id}/connect-to-chat")
    public ResponseEntity<String> connectToChat(@PathVariable(value="id") String host, @RequestBody String chatName) {
-        service.connectToChat("/" + host, chatName);
+        service.connectToGroupChat("/" + host, chatName);
         return new ResponseEntity<>("connected to the chat!", HttpStatus.OK);
    }
 
@@ -61,7 +61,7 @@ public class ChatController {
    public ResponseEntity<String> messageChat(@PathVariable(value="id") String host,
                                              @PathVariable(value="chat") String chatName,
                                              @RequestBody String message) {
-        service.sendMessageToChat("/" + host, chatName, message);
+        service.sendMessageToGroupChat("/" + host, chatName, message);
         return new ResponseEntity<>("message sent to the chat!", HttpStatus.OK);
    }
 

@@ -1,15 +1,13 @@
 package com.tora.websocket;
-
 import org.glassfish.tyrus.server.Server;
-
 import javax.websocket.DeploymentException;
 import java.util.Scanner;
+
 
 public class WebSocketServer {
     public static void main(String[] args) {
 
-        Server server = new Server("localhost", 8080, "/chat", WebSocketServerEndpoint.class);
-
+        Server server = new Server("localhost", 8080, "", WebSocketServerEndpoint.class);
 
         try {
             server.start();

@@ -29,6 +29,7 @@ public class JSONEncoder implements Encoder.Text<JSONObject>{
 
     @Override
     public String encode(JSONObject jsonObject) throws EncodeException {
+        System.out.println("Encode " + jsonObject.toString());
         return jsonObject.toString();
     }
 }

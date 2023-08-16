@@ -4,20 +4,21 @@ import com.tora.handlers.ConnectionHandler;
 import com.tora.handlers.ConsoleRequestHandler;
 import com.tora.model.GroupChat;
 import com.tora.utils.JSONBuilder;
+import com.tora.websocket.IService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
 @org.springframework.stereotype.Service
-public class Service {
+public class Service implements IService {
     private static final Logger logger = LoggerFactory.getLogger(Service.class);
 
     private final ConnectionHandler connectionHandler;
 
     private final ConsoleRequestHandler requestHandler;
 
-    public void shutDown() throws IOException, InterruptedException {
+    public void terminate() throws IOException, InterruptedException {
         connectionHandler.shutdown();
     }
     public Service(ConnectionHandler connectionHandler, ConsoleRequestHandler requestHandler) {
@@ -29,17 +30,17 @@ public class Service {
         connectionHandler.listen(port);
     }
 
-    public void connect(String host, String port) throws Exception {
+    public void connectToChat(String host, String port) throws Exception {
         connectionHandler.addPendingConnection(host, port);
     }
 
-    public String[] getAllConnections() {
+    public String[] getConnections() {
         return connectionHandler.getConnections().keySet().toArray(String[]::new);
     }
 
 
 
-    public void sendMessage(String to, String content) {
+    public void sendMessageToChat(String to, String content) {
         connectionHandler.getConnections().computeIfPresent(to, (key, value) ->
         {
             try {
@@ -50,7 +51,7 @@ public class Service {
         });
     }
 
-    public void terminate(String connection){
+    public void closeConnection(String connection) {
         connectionHandler.getConnections().computeIfPresent(connection,(key, value) ->{
            try{
                value.send(JSONBuilder.create().addHeader("type", "terminate").build());
@@ -81,7 +82,7 @@ public class Service {
         });
     }
 
-    public void connectToChat(String host, String chatName) {
+    public void connectToGroupChat(String host, String chatName) {
         connectionHandler.getConnections().computeIfPresent(host, (key, value) ->
         {
             try {
@@ -95,7 +96,7 @@ public class Service {
             return value;
         });
     }
-    public void sendMessageToChat(String host, String chatName, String content) {
+    public void sendMessageToGroupChat(String host, String chatName, String content) {
         connectionHandler.getConnections().computeIfPresent(host, (key, value) ->
         {
             try {
