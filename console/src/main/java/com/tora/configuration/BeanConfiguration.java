@@ -7,7 +7,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import jakarta.websocket.Session;
-import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
@@ -19,8 +18,8 @@ public class BeanConfiguration {
     private final IService service;
     private final Map<String, Session> sessions;
     public BeanConfiguration() {
-        service = new WebSocketService();
         sessions = new ConcurrentHashMap<>();
+        service = new WebSocketService();
     }
 
     @Bean(name="connections")

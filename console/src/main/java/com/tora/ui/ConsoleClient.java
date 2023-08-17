@@ -21,11 +21,6 @@ public class ConsoleClient {
 
     public void run() throws Exception {
         Scanner in = new Scanner(System.in);
-        /*
-        if (!readValidPort(in)) {
-            return;
-        }
-        */
         String[] command;
         String completeCommand;
         while (true) {

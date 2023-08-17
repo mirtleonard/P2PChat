@@ -11,11 +11,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.HashMap;
 import java.util.Map;
 
 @ServerEndpoint(value = "/chat/{username}", decoders = JSONDecoder.class, encoders = JSONEncoder.class, configurator = ServerConfigurator.class)
@@ -23,7 +21,7 @@ import java.util.Map;
 public class WebSocketEndpoint {
 
     private static final Logger logger = LoggerFactory.getLogger(WebSocketEndpoint.class);
-    private final Map<String, Session> sessions;
+    private final Map<String, Session> sessions ;
     private Session session;
     private String userAddress;
 
@@ -35,18 +33,16 @@ public class WebSocketEndpoint {
     }
 
     @OnOpen
-    public void onOpen (Session session, @PathParam("username") final String username) {
-        System.out.println(session.toString());
-        System.out.println(session.getUserProperties().keySet());
+    public void onOpen(Session session, @PathParam("username") final String username) {
         this.session = session;
         if (session.getUserProperties().get("remote_ip") != null) {
             this.userAddress = (String) session.getUserProperties().get("remote_ip") + ":" + ((Integer) session.getUserProperties().get("remote_port")).toString();
+            sessions.putIfAbsent(username, session);
+            System.out.println("[SERVER]: Handshake successful, session ID: " + session.getId());
         }
-        sessions.computeIfAbsent(username, (k) -> session);
-        System.out.println("[SERVER]: Handshake successful, session ID: " + session.getId());
     }
     @OnMessage
-    public void onMessage (JSONObject json, Session session) throws EncodeException, IOException {
+    public void onMessage(JSONObject json, Session session) throws EncodeException, IOException {
         System.out.println("server onMessage");
         try {
             if ("terminate".equals(json.get("terminate"))) {
@@ -63,7 +59,7 @@ public class WebSocketEndpoint {
         session.getBasicRemote().sendText(json.toString());
     }
     @OnClose
-    public void onClose (Session session, CloseReason closeReason) {
+    public void onClose(Session session, CloseReason closeReason) {
         sessions.remove(session.getRequestURI());
         System.out.println("[SERVER]: Session " + session.getId() + " closed, because " + closeReason);
     }
@@ -75,5 +71,6 @@ public class WebSocketEndpoint {
     public void connect(String remote_ip, String remote_port) throws URISyntaxException, DeploymentException, IOException {
         userAddress = remote_ip + ":" + remote_port;
         session = container.connectToServer(this, new URI("ws://" + userAddress + "/chat" + "/leonard" ));
+        sessions.putIfAbsent(userAddress, session);
     }
 }

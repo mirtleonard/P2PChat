@@ -63,7 +63,7 @@ public class BasicSocketService implements IService {
     }
 
 
-    public void createChat(String name){
+    public void createChat(String name) {
         requestHandler.getGroupChats().putIfAbsent(name, new GroupChat(name));
     }
 
