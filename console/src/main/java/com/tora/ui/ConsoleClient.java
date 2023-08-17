@@ -29,12 +29,12 @@ public class ConsoleClient {
                 completeCommand = in.nextLine().trim();
                 command = completeCommand.split(" +");
                 if ("connect".equals(command[0])) {
-                    if (command.length != 3) {
+                    if (command.length != 4) {
                         System.out.println("Wrong number of arguments");
                         continue;
                     }
                     try {
-                        service.connectToChat(command[1], command[2]);
+                        service.connectToChat(command[1], command[2], command[3]);
                     } catch (Exception e) {
                         System.out.println(e);
                     }
@@ -82,7 +82,7 @@ public class ConsoleClient {
                         System.out.println("Missing arguments(command, ip, chat_name");
                         continue;
                     }
-                    service.connectToChat(command[1], command[2]);
+                    service.connectToGroupChat(command[1], command[2]);
                     continue;
                 }
                 if ("msg_chat".equals(command[0])) {
