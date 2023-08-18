@@ -2,6 +2,7 @@ package com.tora.service;
 
 import com.tora.configuration.WebSocketContainers;
 import com.tora.model.GroupChat;
+import com.tora.utils.JSONBuilder;
 import com.tora.websocket.WebSocketEndpoint;
 import jakarta.websocket.Session;
 import org.slf4j.Logger;
@@ -9,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
 import java.sql.Connection;
 import java.util.Map;
 
@@ -17,18 +19,29 @@ public class WebSocketService implements IService {
 
     private static final Logger logger = LoggerFactory.getLogger(WebSocketEndpoint.class);
 
-    private final Map<String, Session> sessions = WebSocketContainers.sessions;
+    private final Map<String, Session> sessions =  WebSocketContainers.sessions;
+
+
+    public void notifyWeb(String action) {
+        try {
+            sessions.get("webApp").getBasicRemote().sendText(action);
+        } catch (Exception ex) {
+            logger.info("Error: coudn't notify web app: " + ex.getMessage());
+        }
+    }
 
     @Override
     public void connectToGroupChat(String host, String chatName) throws Exception {
 
     }
 
-    public void connectToChat(String host, String port) {
+    public void connectToChat(String alias, String host, String port) {
+        notifyWeb("Connected with " + alias);
         WebSocketEndpoint client = new WebSocketEndpoint();
         try {
-            client.connect(host, port);
+            client.connect(alias, host, port);
         } catch (Exception e) {
+            notifyWeb("Coudn't connect with " + alias);
             logger.error(e.getMessage());
             e.printStackTrace();
         }
@@ -58,25 +71,25 @@ public class WebSocketService implements IService {
 
     @Override
     public void createChat(String chatName) throws Exception {
-
     }
 
     @Override
     public void getChatsFromUser(String host) throws Exception {
-
     }
 
     @Override
-    public void sendMessageToChat(String host, String message) throws Exception {
+    public void sendMessageToChat(String host, String content) throws Exception {
         Session session;
         if ((session = sessions.get(host)) == null) {
             throw new Error("Host: " + host + " doesn't exists");
         }
-        session.getBasicRemote().sendText(message);
+        notifyWeb("Message sent to: " + host + "message: " + content);
+        session.getBasicRemote().sendText(
+                JSONBuilder.create().addHeader("type", "message").setBody(content).build().toString()
+        );
     }
 
     @Override
     public void sendMessageToGroupChat(String host, String chatName, String message) throws Exception {
-
     }
 }

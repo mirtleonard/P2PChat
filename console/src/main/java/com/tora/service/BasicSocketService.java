@@ -30,8 +30,8 @@ public class BasicSocketService implements IService {
         connectionHandler.listen(port);
     }
 
-    public void connectToChat(String host, String port) throws Exception {
-        connectionHandler.addPendingConnection(host, port);
+    public void connectToChat(String alias, String host, String port) throws Exception {
+        connectionHandler.addPendingConnection(alias, port);
     }
 
     public String[] getConnections() {

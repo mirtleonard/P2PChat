@@ -20,7 +20,7 @@ public class ChatController {
     @PostMapping("/connect")
     public ResponseEntity<String> connectToChat(@RequestBody ConnectionDTO data) {
         try {
-            service.connectToChat(data.host, data.port);
+            service.connectToChat(data.alias, data.host, data.port);
         } catch (Exception e) {
             return new ResponseEntity<>("ip not found", HttpStatus.BAD_REQUEST);
         }
@@ -67,11 +67,11 @@ public class ChatController {
 
 
     private static class ConnectionDTO {
-        public String host;
-        public String port;
-        ConnectionDTO(String host, String port) {
+        public String host, port, alias;
+        ConnectionDTO(String alias, String host, String port) {
             this.host = host;
             this.port = port;
+            this.alias = alias;
         }
     }
 

@@ -9,6 +9,7 @@ import jakarta.websocket.server.ServerEndpoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -18,10 +19,13 @@ import java.util.Map;
 
 @ServerEndpoint(value = "/chat/{username}", decoders = JSONDecoder.class, encoders = JSONEncoder.class, configurator = ServerConfigurator.class)
 @ClientEndpoint(encoders = JSONEncoder.class, decoders = JSONDecoder.class)
+@Component
+@ComponentScan(basePackages = "com.tora.configuration")
 public class WebSocketEndpoint {
 
     private static final Logger logger = LoggerFactory.getLogger(WebSocketEndpoint.class);
-    private final Map<String, Session> sessions ;
+    @Autowired
+    private Map<String, Session> sessions;
     private Session session;
     private String userAddress;
 
@@ -29,7 +33,7 @@ public class WebSocketEndpoint {
 
     public WebSocketEndpoint() {
         container = ContainerProvider.getWebSocketContainer();
-        sessions = WebSocketContainers.sessions;
+        this.sessions = WebSocketContainers.sessions;
     }
 
     @OnOpen
@@ -43,20 +47,12 @@ public class WebSocketEndpoint {
     }
     @OnMessage
     public void onMessage(JSONObject json, Session session) throws EncodeException, IOException {
-        System.out.println("server onMessage");
-        try {
-            if ("terminate".equals(json.get("terminate"))) {
-                try {
-                    session.close(new CloseReason(CloseReason.CloseCodes.NORMAL_CLOSURE, "session closed"));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }catch (Exception e) {
-            e.printStackTrace();
+        System.out.println(json.get("body"));
+        Session webApp = sessions.get("webApp");
+        if (webApp != null && webApp != session && webApp.isOpen()) {
+            webApp.getBasicRemote().sendText(json.toString());
         }
-        System.out.println(json.toString());
-        session.getBasicRemote().sendText(json.toString());
+        //session.getBasicRemote().sendText(json.toString());
     }
     @OnClose
     public void onClose(Session session, CloseReason closeReason) {
@@ -68,9 +64,10 @@ public class WebSocketEndpoint {
         logger.error("Error ", t);
     }
 
-    public void connect(String remote_ip, String remote_port) throws URISyntaxException, DeploymentException, IOException {
+    public void connect(String alias, String remote_ip, String remote_port) throws URISyntaxException, DeploymentException, IOException {
+        System.out.println(alias);
         userAddress = remote_ip + ":" + remote_port;
         session = container.connectToServer(this, new URI("ws://" + userAddress + "/chat" + "/leonard" ));
-        sessions.putIfAbsent(userAddress, session);
+        sessions.putIfAbsent(alias, session);
     }
 }
