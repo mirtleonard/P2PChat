@@ -1,17 +1,12 @@
 package com.tora.service;
 
 import com.tora.configuration.WebSocketContainers;
-import com.tora.model.GroupChat;
 import com.tora.utils.JSONBuilder;
 import com.tora.websocket.WebSocketEndpoint;
 import jakarta.websocket.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import java.io.IOException;
-import java.sql.Connection;
 import java.util.Map;
 
 @Component
@@ -22,11 +17,17 @@ public class WebSocketService implements IService {
     private final Map<String, Session> sessions =  WebSocketContainers.sessions;
 
 
+    public String createNotification(String message) {
+        return JSONBuilder.create()
+                .addHeader("type", "notification")
+                .setBody(message).build().toString();
+    }
+
     public void notifyWeb(String action) {
         try {
             sessions.get("webApp").getBasicRemote().sendText(action);
         } catch (Exception ex) {
-            logger.info("Error: coudn't notify web app: " + ex.getMessage());
+            logger.info("Error: couldn't notify web app: " + ex.getMessage());
         }
     }
 
@@ -36,12 +37,16 @@ public class WebSocketService implements IService {
     }
 
     public void connectToChat(String alias, String host, String port) {
-        notifyWeb("Connected with " + alias);
         WebSocketEndpoint client = new WebSocketEndpoint();
         try {
             client.connect(alias, host, port);
+            notifyWeb(JSONBuilder.create()
+                    .addHeader("alias", alias)
+                    .addHeader("type", "connection")
+                    .build().toString());
+            notifyWeb(createNotification("Connected" + alias));
         } catch (Exception e) {
-            notifyWeb("Coudn't connect with " + alias);
+            notifyWeb(createNotification("Coudn't connect with " + alias));
             logger.error(e.getMessage());
             e.printStackTrace();
         }
@@ -83,10 +88,14 @@ public class WebSocketService implements IService {
         if ((session = sessions.get(host)) == null) {
             throw new Error("Host: " + host + " doesn't exists");
         }
-        notifyWeb("Message sent to: " + host + "message: " + content);
         session.getBasicRemote().sendText(
                 JSONBuilder.create().addHeader("type", "message").setBody(content).build().toString()
         );
+        notifyWeb(JSONBuilder.create()
+                .addHeader("type", "message")
+                .addHeader("from", "me")
+                .addHeader("to", host)
+                .setBody(content).build().toString());
     }
 
     @Override

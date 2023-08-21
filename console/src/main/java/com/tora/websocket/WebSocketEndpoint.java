@@ -8,7 +8,6 @@ import jakarta.websocket.*;
 import jakarta.websocket.server.ServerEndpoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.stereotype.Component;
 
@@ -24,9 +23,9 @@ import java.util.Map;
 public class WebSocketEndpoint {
 
     private static final Logger logger = LoggerFactory.getLogger(WebSocketEndpoint.class);
-    @Autowired
     private Map<String, Session> sessions;
     private Session session;
+    private String alias;
     private String userAddress;
 
     protected WebSocketContainer container;
@@ -40,7 +39,8 @@ public class WebSocketEndpoint {
     public void onOpen(Session session, @PathParam("username") final String username) {
         this.session = session;
         if (session.getUserProperties().get("remote_ip") != null) {
-            this.userAddress = (String) session.getUserProperties().get("remote_ip") + ":" + ((Integer) session.getUserProperties().get("remote_port")).toString();
+            //this.userAddress = (String) session.getUserProperties().get("remote_ip") + ":" + ((Integer) session.getUserProperties().get("remote_port")).toString();
+            this.alias = username;
             sessions.putIfAbsent(username, session);
             System.out.println("[SERVER]: Handshake successful, session ID: " + session.getId());
         }
@@ -50,9 +50,9 @@ public class WebSocketEndpoint {
         System.out.println(json.get("body"));
         Session webApp = sessions.get("webApp");
         if (webApp != null && webApp != session && webApp.isOpen()) {
+            json.getJSONObject("header").append("from", alias);
             webApp.getBasicRemote().sendText(json.toString());
         }
-        //session.getBasicRemote().sendText(json.toString());
     }
     @OnClose
     public void onClose(Session session, CloseReason closeReason) {
@@ -65,8 +65,8 @@ public class WebSocketEndpoint {
     }
 
     public void connect(String alias, String remote_ip, String remote_port) throws URISyntaxException, DeploymentException, IOException {
-        System.out.println(alias);
         userAddress = remote_ip + ":" + remote_port;
+        this.alias = alias;
         session = container.connectToServer(this, new URI("ws://" + userAddress + "/chat" + "/leonard" ));
         sessions.putIfAbsent(alias, session);
     }
