@@ -1,5 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import useWebSocket, { ReadyState } from 'react-use-websocket';
+import { useDispatch, useSelector } from 'react-redux'
+import { setContent, setReceiver, addMessage } from './redux/messageSlice';
+import { RootState } from './redux/store';
 
 import './App.css';
 import $ from 'jquery';
@@ -9,10 +12,9 @@ const url: String = "http://127.0.0.1:8080/api/chat";
 export const Chat = () => {
   const WS_URL = 'ws://127.0.0.1:8080/chat/webApp';
   const [messageHistory, setMessageHistory] = useState([]);
-  const [currentUser, setCurrentUser] = useState('');
   const [connectedUsers, setConnectedUsers] = useState(["None"]);
-  const [notificationHistory, setNotificationHistory] = useState([]);
-  const [message, setMessage] = useState('');
+  const message = useSelector((state : RootState) => state.messages);
+  const dispatch = useDispatch();
 
   const { lastMessage, readyState } = useWebSocket(WS_URL, {
     onOpen: () => {
@@ -28,15 +30,6 @@ export const Chat = () => {
     [ReadyState.UNINSTANTIATED]: 'Uninstantiated',
   }[readyState];
 
-  const parseMessage = (jsonString: string): string => {
-    const json = JSON.parse(jsonString);
-    if (json.header.from !== 'me') {
-      return json.header.from + ": " + json.body;
-    } else {
-      return "sent to " + json.header.to + ": " + json.body;
-    }
-    return "error";
-  }
 
   useEffect(() => {
     if (lastMessage === null) {
@@ -44,7 +37,8 @@ export const Chat = () => {
     }
     const header = JSON.parse(lastMessage.data).header;
     if (header.type == 'message') {
-      setMessageHistory([...messageHistory, parseMessage(lastMessage.data)]);
+      dispatch(addMessage(lastMessage.data));
+      setMessageHistory([...messageHistory, lastMessage.data]);
     } else if (header.type == 'notification') {
       alert(lastMessage.data);
     } else if (header.type == 'connection') {
@@ -54,37 +48,46 @@ export const Chat = () => {
 
 
   const handleClickSendMessage = () => {
-
-    const formattedMessage = "sent to " + currentUser + ": " + message;
     $.ajax({
-      url: url + "/" + currentUser + "/send-message",
+      url: url + "/" + message.receiver + "/send-message",
       type: "POST",
-      data: JSON.stringify(message),
+      data: message.content,
       contentType: "application/json",
-      success: (response) => {
+      success: (response: any) => {
         console.log(JSON.stringify(response));
       }
     });
-    setMessage('');
+    dispatch(setContent(''));
   };
+  
+  const renderMessage = (message) => {
+    const timeString = new Date(message.header.timestamp).toLocaleTimeString();
+    return (
+      <div className={message.header.from !== "me" ? "messageReceived" : "messageSent"}>
+        <div className="content">
+          {message.body}
+        </div>
+        <div className="details">
+          {timeString} - {message.header.from !== "me"? message.header.from : ""}
+        </div>
+      </div>
+    );
+  }
 
 
   return (
     <div>
       <span>The WebSocket is currently {connectionStatus}</span>
-      {/* {lastMessage ? <span>Last message: {lastMessage.data}</span> : null} */}
       <div className='chat-window'>
-        <ul>
-          {messageHistory.map((currentMessage, idx) => (
-            <li> <span key={idx}>{currentMessage}</span></li>
-          ))}
-        </ul>
+        <div className="chat-content">
+          {message.allMessages.filter(mess => (mess.header.from === message.receiver
+            || mess.header.to === message.receiver)).map(mess => renderMessage(mess))}
+        </div>
       </div>
-      <strong>{currentUser}</strong>
       <div className='user-interaction'>
         <select
-          value={currentUser}
-          onChange={e => setCurrentUser(e.target.value)}
+          value={message.receiver}
+          onChange={e => dispatch(setReceiver(e.target.value))}
         >
           {connectedUsers.map((user, idx) => (
             <option key={idx}>{user}</option>
@@ -92,8 +95,8 @@ export const Chat = () => {
         </select>
         <input
           type="text"
-          value={message}
-          onChange={e => setMessage(e.target.value)}
+          value={message.content}
+          onChange={e => dispatch(setContent(e.target.value))}
         />
         <button
           onClick={handleClickSendMessage}

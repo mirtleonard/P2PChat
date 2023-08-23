@@ -1,6 +1,7 @@
 package com.tora.websocket;
 
 import com.tora.configuration.WebSocketContainers;
+import com.tora.utils.JSONBuilder;
 import jakarta.websocket.server.PathParam;
 import org.json.JSONObject;
 
@@ -23,10 +24,9 @@ import java.util.Map;
 public class WebSocketEndpoint {
 
     private static final Logger logger = LoggerFactory.getLogger(WebSocketEndpoint.class);
-    private Map<String, Session> sessions;
+    private final Map<String, Session> sessions;
     private Session session;
     private String alias;
-    private String userAddress;
 
     protected WebSocketContainer container;
 
@@ -35,28 +35,41 @@ public class WebSocketEndpoint {
         this.sessions = WebSocketContainers.sessions;
     }
 
-    @OnOpen
-    public void onOpen(Session session, @PathParam("username") final String username) {
-        this.session = session;
-        if (session.getUserProperties().get("remote_ip") != null) {
-            //this.userAddress = (String) session.getUserProperties().get("remote_ip") + ":" + ((Integer) session.getUserProperties().get("remote_port")).toString();
-            this.alias = username;
-            sessions.putIfAbsent(username, session);
-            System.out.println("[SERVER]: Handshake successful, session ID: " + session.getId());
-        }
-    }
-    @OnMessage
-    public void onMessage(JSONObject json, Session session) throws EncodeException, IOException {
-        System.out.println(json.get("body"));
+    private void notifyWebClient(Session session, JSONObject json) throws IOException {
         Session webApp = sessions.get("webApp");
         if (webApp != null && webApp != session && webApp.isOpen()) {
-            json.getJSONObject("header").append("from", alias);
+            json.getJSONObject("header").put("from", alias);
             webApp.getBasicRemote().sendText(json.toString());
         }
     }
+
+    @OnOpen
+    public void onOpen(Session session, @PathParam("username") final String username) throws Exception {
+        this.session = session;
+        if (username != null) {
+            this.alias = username;
+        }
+        if (sessions.containsKey(alias)) {
+            throw new Exception("Error: alias already exists");
+        }
+        sessions.put(alias, session);
+        notifyWebClient(session,
+                JSONBuilder.create()
+                        .addHeader("type", "connection")
+                        .addHeader("alias", alias)
+                        .build()
+        );
+        System.out.println("[SERVER]: Handshake successful, session ID: " + session.getId());
+    }
+
+    @OnMessage
+    public void onMessage(JSONObject json, Session session) throws EncodeException, IOException {
+        System.out.println(json.get("body"));
+        notifyWebClient(session, json);
+    }
     @OnClose
     public void onClose(Session session, CloseReason closeReason) {
-        sessions.remove(session.getRequestURI());
+        sessions.remove(alias);
         System.out.println("[SERVER]: Session " + session.getId() + " closed, because " + closeReason);
     }
     @OnError
@@ -65,7 +78,7 @@ public class WebSocketEndpoint {
     }
 
     public void connect(String alias, String remote_ip, String remote_port) throws URISyntaxException, DeploymentException, IOException {
-        userAddress = remote_ip + ":" + remote_port;
+        String userAddress = remote_ip + ":" + remote_port;
         this.alias = alias;
         session = container.connectToServer(this, new URI("ws://" + userAddress + "/chat" + "/leonard" ));
         sessions.putIfAbsent(alias, session);

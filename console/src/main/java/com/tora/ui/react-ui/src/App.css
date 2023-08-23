@@ -29,3 +29,39 @@ ul {
   margin-top: 10px;
   margin-bottom: 10px;
 }
+
+
+.message__outer {
+  display: flex;
+}
+
+.message__inner {
+  flex: 1;
+  display: flex;
+  flex-direction: row-reverse;
+}
+
+.message__spacer {
+    flex: 1;
+}
+
+.message__bubble {
+    max-width: calc(100% - 67px);
+    overflow-wrap: break-word;
+}
+
+.details {
+  font-size: 10px;
+}
+
+.messageReceived {
+  text-align: left; 
+}
+.messageSent {
+  text-align: right;
+}
+
+.chat-content {
+  margin-left: 10px;
+  margin-right: 10px;
+}

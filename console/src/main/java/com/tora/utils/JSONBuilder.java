@@ -3,6 +3,8 @@ package com.tora.utils;
 import org.json.JSONObject;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 
 public class JSONBuilder {
@@ -10,7 +12,7 @@ public class JSONBuilder {
     private Object body;
 
     private JSONBuilder() {
-        header.put("timestamp", LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME));
+        header.put("timestamp", System.currentTimeMillis());
     }
 
     public static JSONBuilder create() {
