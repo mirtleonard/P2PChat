@@ -1,0 +1,20 @@
+server:
+  port: 8080
+
+spring:
+  security:
+    oauth2:
+      client:
+        registration:
+          keycloak:
+            client-id: chat-server
+            authorization-grant-type: password
+        provider:
+          keycloak:
+            issuer-uri: https://auth-dev-1.app.toradev.net/auth/realms/INTERNSHIP
+      resourceserver:
+        jwt:
+          issuer-uri: https://auth-dev-1.app.toradev.net/auth/realms/INTERNSHIP
+logging:
+  level:
+    root: debug

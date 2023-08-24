@@ -1,12 +1,12 @@
 import { useState } from 'react'
-import Form from 'react-bootstrap/Form'
 import $ from 'jquery';
 
+//const url: String = "http://3.83.65.26:8081/api/chat";
 const url: String = "http://127.0.0.1:8080/api/chat";
 
 export const ConnectionForm = () => {
     const [ip, setIp] = useState('localhost');
-    const [port, setPort] = useState('9090');
+    const [port, setPort] = useState('8082');
     const [alias, setAlias] = useState('test');
 
     const handleConnect = () => {
@@ -14,6 +14,7 @@ export const ConnectionForm = () => {
         $.ajax({
             url: url + "/connect",
             type: "POST",
+            crossDomain: true,
             data: JSON.stringify({ ip, port, alias }),
             contentType: "application/json",
             success: (response) => {
